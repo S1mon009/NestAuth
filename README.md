@@ -54,6 +54,9 @@ MONGO_URI=your_mongodb_uri
 JWT_SECRET=supersecretkey
 JWT_EXPIRES_IN=86400  # time in seconds (24h)
 
+REFRESH_TOKEN_SECRET=anothersupersecretkey
+REFRESH_TOKEN_EXPIRES_IN=604800 #time in seconds (7d)
+
 # Mailtrap
 SMTP_HOST=smtp.mailtrap.io
 SMTP_PORT=2525
@@ -158,3 +161,4 @@ Response:
 - JWT tokens expire based on .env configuration (JWT_EXPIRES_IN).
 - Users must verify their email to access protected routes.
 - The project will be extended with password reset, admin roles and social login.
+
