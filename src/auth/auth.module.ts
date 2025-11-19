@@ -12,6 +12,7 @@ import { JwtStrategy } from './jwt.strategy';
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     PassportModule,
     JwtModule.register({
+      global: true,
       secret: process.env.JWT_SECRET,
       signOptions: { expiresIn: Number(process.env.JWT_EXPIRES_IN) },
     }),
@@ -20,5 +21,4 @@ import { JwtStrategy } from './jwt.strategy';
   providers: [AuthService, JwtStrategy],
   exports: [AuthService],
 })
-export class AuthModule {
-}
+export class AuthModule {}

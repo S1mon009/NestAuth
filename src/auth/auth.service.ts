@@ -1,4 +1,9 @@
-import { Injectable, UnauthorizedException, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -17,20 +22,23 @@ export class AuthService {
   async register(email: string, password: string) {
     const existingUser = await this.userModel.findOne({ email });
     if (existingUser) throw new BadRequestException('Email already exists');
-  
+
     const hashedPassword = await bcrypt.hash(password, 12);
     const user = new this.userModel({ email, password: hashedPassword });
     await user.save();
-  
+
     if (!process.env.JWT_SECRET) {
       throw new InternalServerErrorException('JWT_SECRET is not defined');
     }
-  
-    const verificationToken = this.jwtService.sign(
+
+    const verificationToken = await this.jwtService.signAsync(
       { sub: user._id.toString(), email: user.email },
-      { secret: process.env.JWT_SECRET, expiresIn: '1d' }
+      {
+        secret: process.env.JWT_SECRET,
+        expiresIn: Number(process.env.JWT_EXPIRES_IN) || '1d',
+      },
     );
-  
+
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT),
@@ -41,7 +49,7 @@ export class AuthService {
     });
 
     const safeToken = encodeURIComponent(verificationToken);
-  
+
     try {
       await transporter.sendMail({
         from: '"Nest Auth" <no-reply@nestauth.com>',
@@ -51,22 +59,26 @@ export class AuthService {
       });
     } catch (err) {
       console.error('Email sending failed:', err);
-      throw new InternalServerErrorException('Failed to send verification email');
+      throw new InternalServerErrorException(
+        'Failed to send verification email',
+      );
     }
-  
+
     return { message: 'User registered successfully, verification email sent' };
   }
-  
+
   async verifyEmail(token: string) {
     try {
-      const payload: any = this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
+      const payload: any = this.jwtService.verify(token, {
+        secret: process.env.JWT_SECRET,
+      });
       const user = await this.userModel.findById(payload.sub);
       if (!user) throw new NotFoundException('User not found');
       user.isVerified = true;
       await user.save();
       return { message: 'Email verified successfully' };
-    } catch(err: any) {
-      console.log("JWT VERIFY ERROR:", err);
+    } catch (err: any) {
+      console.log('JWT VERIFY ERROR:', err);
       throw new BadRequestException('Invalid or expired token');
     }
   }
@@ -76,7 +88,8 @@ export class AuthService {
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
     const passwordMatches = await bcrypt.compare(password, user.password);
-    if (!passwordMatches) throw new UnauthorizedException('Invalid credentials');
+    if (!passwordMatches)
+      throw new UnauthorizedException('Invalid credentials');
 
     if (!user.isVerified) throw new UnauthorizedException('Email not verified');
 
@@ -90,14 +103,14 @@ export class AuthService {
       role: user.role,
     };
 
-    const accessToken = this.jwtService.sign(payload, {
+    const accessToken = await this.jwtService.signAsync(payload, {
       secret: process.env.JWT_SECRET,
-      expiresIn: Number(process.env.JWT_EXPIRES_IN), // w sekundach
+      expiresIn: Number(process.env.JWT_EXPIRES_IN),
     });
 
-    const refreshToken = this.jwtService.sign(payload, {
+    const refreshToken = await this.jwtService.signAsync(payload, {
       secret: process.env.REFRESH_TOKEN_SECRET,
-      expiresIn: Number(process.env.REFRESH_TOKEN_EXPIRES_IN), // w sekundach
+      expiresIn: Number(process.env.REFRESH_TOKEN_EXPIRES_IN),
     });
 
     user.refreshToken = refreshToken;
@@ -123,12 +136,12 @@ export class AuthService {
         role: user.role,
       };
 
-      const accessToken = this.jwtService.sign(newPayload, {
+      const accessToken = await this.jwtService.signAsync(newPayload, {
         secret: process.env.JWT_SECRET,
         expiresIn: Number(process.env.JWT_EXPIRES_IN),
       });
 
-      const refreshToken = this.jwtService.sign(newPayload, {
+      const refreshToken = await this.jwtService.signAsync(newPayload, {
         secret: process.env.REFRESH_TOKEN_SECRET,
         expiresIn: Number(process.env.REFRESH_TOKEN_EXPIRES_IN),
       });
