@@ -16,6 +16,7 @@ Passwords are hashed with **bcrypt**, and verification emails are sent using **M
 - Email verification after registration
 - User login and JWT token generation
 - Refresh token mechanism
+- Forgot password mechanism
 - Protected routes requiring JWT authentication
 - MongoDB as the database
 - Input validation with `class-validator`
@@ -53,6 +54,7 @@ MONGO_URI=your_mongodb_uri
 
 JWT_SECRET=supersecretkey
 JWT_EXPIRES_IN=86400  # time in seconds (24h)
+JWT_RESET_PASSWORD_EXPIRES_IN=900 # time in seconds (15m)
 
 REFRESH_TOKEN_SECRET=anothersupersecretkey
 REFRESH_TOKEN_EXPIRES_IN=604800 #time in seconds (7d)
@@ -62,6 +64,9 @@ SMTP_HOST=smtp.mailtrap.io
 SMTP_PORT=2525
 SMTP_USER=YOUR_MAILTRAP_USERNAME
 SMTP_PASS=YOUR_MAILTRAP_PASSWORD
+
+REDIRECT_TO_VERIFY_EMAIL=your_redirect_url_to_verify_email
+FRONTEND_URL=your_frontend_url
 ```
 ### 4. Start the application
 ```bash
@@ -161,4 +166,5 @@ Response:
 - JWT tokens expire based on .env configuration (JWT_EXPIRES_IN).
 - Users must verify their email to access protected routes.
 - The project will be extended with password reset, admin roles and social login.
+
 
