@@ -73,9 +73,17 @@ export class AuthService {
         secret: process.env.JWT_SECRET,
       });
       const user = await this.userModel.findById(payload.sub);
+
       if (!user) throw new NotFoundException('User not found');
+      if (user.isVerified) return { message: 'Email is already verified' };
+
       user.isVerified = true;
       await user.save();
+
+      if (process.env.REDIRECT_TO_VERIFY_EMAIL) {
+        return { redirect: process.env.REDIRECT_TO_VERIFY_EMAIL };
+      }
+
       return { message: 'Email verified successfully' };
     } catch (err: any) {
       console.log('JWT VERIFY ERROR:', err);
@@ -152,6 +160,83 @@ export class AuthService {
       return { accessToken, refreshToken };
     } catch (err) {
       throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+  }
+
+  async forgotPassword(email: string) {
+    const user = await this.userModel.findOne({ email });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const verificationToken = await this.jwtService.signAsync(
+      { sub: user._id.toString(), email: user.email },
+      {
+        secret: process.env.JWT_SECRET,
+        expiresIn: Number(process.env.JWT_RESET_PASSWORD_EXPIRES_IN),
+      },
+    );
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT),
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+
+    const safeToken = encodeURIComponent(verificationToken);
+
+    try {
+      await transporter.sendMail({
+        from: '"Nest Auth" <no-reply@nestauth.com>',
+        to: user.email,
+        subject: 'Reset your password',
+        html: `<p>Click <a href="${process.env.FRONTEND_URL}/auth/verify-reset-password?token=${safeToken}">here</a> to reset your password.</p>`,
+      });
+    } catch (err) {
+      console.error('Email sending failed:', err);
+      throw new InternalServerErrorException('Failed to send reset email');
+    }
+
+    return { message: 'Reset link sent to email' };
+  }
+
+  async verifyResetToken(token: string) {
+    try {
+      const payload = await this.jwtService.verifyAsync(token, {
+        secret: process.env.JWT_SECRET,
+      });
+
+      const user = await this.userModel.findById(payload.sub);
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      return { message: 'Token is valid' };
+    } catch (err) {
+      throw new BadRequestException('Invalid or expired reset token');
+    }
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    try {
+      const payload = await this.jwtService.verifyAsync(token, {
+        secret: process.env.JWT_SECRET,
+      });
+
+      const user = await this.userModel.findById(payload.sub);
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      user.password = await bcrypt.hash(newPassword, 12);
+      await user.save();
+
+      return { message: 'Password has been successfully reset' };
+    } catch (err) {
+      throw new BadRequestException('Invalid or expired reset token');
     }
   }
 }

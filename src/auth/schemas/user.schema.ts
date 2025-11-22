@@ -19,7 +19,13 @@ export class User {
 
   @Prop()
   refreshToken?: string;
-  
+
+  @Prop()
+  resetPasswordToken?: string;
+
+  @Prop()
+  resetPasswordExpires?: Date;
+
   _id: Types.ObjectId;
 }
 
