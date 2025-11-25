@@ -9,11 +9,12 @@ import {
   Res,
 } from '@nestjs/common';
 import { type Response } from 'express';
+import { type Request } from 'express';
+import { type RequestWithUser } from './interfaces/profile.interface';
 import { AuthService } from './auth.service';
+import { JwtAuthGuard } from './jwt-auth.guard';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { RefreshTokenDto } from './dto/refresh-token.dto';
-import { JwtAuthGuard } from './jwt-auth.guard';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 
@@ -33,8 +34,9 @@ export class AuthController {
   }
 
   @Post('refresh-token')
-  async refresh(@Body() dto: RefreshTokenDto) {
-    return this.authService.refreshToken(dto.refreshToken);
+  refreshToken(@Req() req: Request) {
+    const refreshToken: string = req.cookies['refresh_token'];
+    return this.authService.refreshToken(refreshToken);
   }
 
   @Get('verify-email')
@@ -49,23 +51,27 @@ export class AuthController {
   }
 
   @Post('forgot-password')
-  async forgotPasswordEndpoint(@Body('email') dto: ForgotPasswordDto) {
+  async forgotPasswordEndpoint(@Body() dto: ForgotPasswordDto) {
     return this.authService.forgotPassword(dto.email);
   }
 
-  @Get('verify-reset-password')
+  @Post('verify-reset-password')
   async verifyResetTokenEndpoint(@Query('token') token: string) {
     return this.authService.verifyResetToken(token);
   }
 
   @Post('reset-password')
-  async resetPasswordEndpoint(@Body() dto: ResetPasswordDto) {
-    return this.authService.resetPassword(dto.token, dto.newPassword);
+  async resetPasswordEndpoint(
+    @Body() dto: ResetPasswordDto,
+    @Query('token') token: string,
+  ) {
+    return this.authService.resetPassword(token, dto.newPassword);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('profile')
-  getProfile(@Req() req) {
+  getProfile(@Req() req: RequestWithUser) {
+    console.log(req.user);
     return req.user;
   }
 }
