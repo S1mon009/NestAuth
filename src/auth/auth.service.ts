@@ -11,13 +11,17 @@ import { Model } from 'mongoose';
 import bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { EmailService } from 'src/email/email.service';
-import { User, UserDocument } from './schemas/user.schema';
+import { User, UserDocument } from '../users/schemas/user.schema';
+import { Profile, ProfileDocument } from '../users/schemas/profile.schema';
 import { type JwtPayloadInterface } from './interfaces/jwtPayload.interface';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(User.name)
+    private userModel: Model<UserDocument>,
+    @InjectModel(Profile.name)
+    private readonly profileModel: Model<ProfileDocument>,
     private jwtService: JwtService,
     private emailService: EmailService,
     private readonly configService: ConfigService,
@@ -34,6 +38,9 @@ export class AuthService {
 
     const user = new this.userModel({ email, password: hashedPassword });
     await user.save();
+
+    const profile = new this.profileModel({ userId: user._id });
+    await profile.save();
 
     if (!process.env.JWT_SECRET) {
       throw new InternalServerErrorException('JWT_SECRET is not defined');
@@ -117,7 +124,11 @@ export class AuthService {
     user.refreshToken = refreshToken;
     await user.save();
 
-    return { accessToken, refreshToken };
+    return {
+      accessToken,
+      refreshToken,
+      user: { email: user.email, role: user.role, userId: user._id.toString() },
+    };
   }
 
   async refreshToken(oldRefreshToken: string) {

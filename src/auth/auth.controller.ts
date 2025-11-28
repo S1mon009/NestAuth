@@ -1,18 +1,7 @@
-import {
-  Body,
-  Controller,
-  Post,
-  UseGuards,
-  Get,
-  Req,
-  Query,
-  Res,
-} from '@nestjs/common';
+import { Body, Controller, Post, Get, Req, Query, Res } from '@nestjs/common';
 import { type Response } from 'express';
 import { type Request } from 'express';
-import { type RequestWithUser } from './interfaces/profile.interface';
 import { AuthService } from './auth.service';
-import { JwtAuthGuard } from './jwt-auth.guard';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
@@ -66,12 +55,5 @@ export class AuthController {
     @Query('token') token: string,
   ) {
     return this.authService.resetPassword(token, dto.newPassword);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Get('profile')
-  getProfile(@Req() req: RequestWithUser) {
-    console.log(req.user);
-    return req.user;
   }
 }

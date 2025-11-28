@@ -12,7 +12,7 @@ export class Log {
   action: string;
 
   @Prop()
-  ip: string;
+  ip?: string;
 }
 
 export const LogSchema = SchemaFactory.createForClass(Log);

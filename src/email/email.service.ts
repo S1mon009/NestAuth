@@ -30,7 +30,7 @@ export class EmailService {
 
     const url: string = `${this.configService.get('FRONTEND_URL') || 'http://localhost:3000'}/auth/verify-email?token=${token}`;
 
-    const html = template.replace('{{verificationLink}}', url);
+    const html = template.replaceAll('{{verificationLink}}', url);
 
     return this.sendMail(email, 'Verify your email', html);
   }
@@ -40,7 +40,7 @@ export class EmailService {
 
     const url: string = `${this.configService.get('FRONTEND_URL')}/reset-password?token=${token}`;
 
-    const html = template.replace('{{resetLink}}', url);
+    const html = template.replaceAll('{{resetLink}}', url);
 
     return this.sendMail(email, 'Reset your password', html);
   }

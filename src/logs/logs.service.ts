@@ -5,14 +5,16 @@ import { Log, LogDocument } from './schemas/log.schema';
 
 @Injectable()
 export class LogsService {
-  constructor(@InjectModel(Log.name) private logModel: Model<LogDocument>) {}
+  constructor(
+    @InjectModel(Log.name) private readonly logModel: Model<LogDocument>,
+  ) {}
 
-  async createLog(userId: string, action: string, ip?: string) {
-    const log = new this.logModel({ userId, action, ip });
-    return log.save();
+  async findAll(): Promise<LogDocument[]> {
+    return this.logModel.find().sort({ createdAt: -1 }).exec();
   }
 
-  async getUserLogs(userId: string) {
-    return this.logModel.find({ userId }).sort({ createdAt: -1 });
+  async create(userId: string, action: string, ip?: string) {
+    const log = new this.logModel({ userId, action, ip });
+    return log.save();
   }
 }
