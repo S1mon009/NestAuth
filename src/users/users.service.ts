@@ -3,6 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { User, UserDocument } from './schemas/user.schema';
@@ -16,19 +17,19 @@ export class UsersService {
   constructor(
     @InjectModel(User.name)
     private readonly userModel: Model<UserDocument>,
-
     @InjectModel(Profile.name)
     private readonly profileModel: Model<ProfileDocument>,
     @InjectModel(Log.name)
     private readonly logModel: Model<LogDocument>,
-
     private readonly authService: AuthService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async createUserAdmin(
     email: string,
     password: string,
     role: Roles = Roles.USER,
+    adminId: string,
   ): Promise<UserDocument> {
     const existing = await this.userModel.findOne({ email });
     if (existing) throw new BadRequestException('Email already exists');
@@ -41,16 +42,32 @@ export class UsersService {
     user.role = role;
     await user.save();
 
+    this.eventEmitter.emit('log.create', {
+      userId: adminId,
+      action: 'USER_CREATED_BY_ADMIN',
+    });
+
     return user;
   }
 
-  async findAll(): Promise<UserDocument[]> {
+  async findAll(adminId: string): Promise<UserDocument[]> {
+    this.eventEmitter.emit('log.create', {
+      userId: adminId,
+      action: 'ALL_USERS_VIEWED',
+    });
+
     return this.userModel.find().exec();
   }
 
-  async findOneById(id: string): Promise<UserDocument> {
-    const user = await this.userModel.findById(new Types.ObjectId(id));
+  async findOneById(userId: string, adminId?: string): Promise<UserDocument> {
+    const user = await this.userModel.findById(new Types.ObjectId(userId));
     if (!user) throw new NotFoundException('User not found');
+
+    this.eventEmitter.emit('log.create', {
+      userId: adminId || userId,
+      action: `USER_PROFILE_VIEWED ${userId} ${adminId ? '(by admin)' : ''}`,
+    });
+
     return user;
   }
 
@@ -65,30 +82,45 @@ export class UsersService {
     Object.assign(profile, updateData);
     await profile.save();
 
-    await this.logAction(actionUserId || userId, 'update_profile');
+    this.eventEmitter.emit('log.create', {
+      userId: actionUserId,
+      action: `USER_PROFILE_UPDATED ${userId}`,
+    });
 
     return profile;
   }
 
-  async getUserProfile(userId: string): Promise<ProfileDocument> {
+  async getUserProfile(
+    userId: string,
+    adminId?: string,
+  ): Promise<ProfileDocument> {
     const profile = await this.profileModel.findOne({
       userId: new Types.ObjectId(userId),
     });
 
     if (!profile) throw new NotFoundException('Profile not found');
+
+    this.eventEmitter.emit('log.create', {
+      userId: adminId || userId,
+      action: `USER_PROFILE_VIEWED ${userId} ${adminId ? '(by admin)' : ''}`,
+    });
     return profile;
   }
 
-  async updateUserRole(userId: string, newRole: Roles): Promise<UserDocument> {
+  async updateUserRole(
+    userId: string,
+    newRole: Roles,
+    adminId: string,
+  ): Promise<UserDocument> {
     const user = await this.userModel.findById(new Types.ObjectId(userId));
     if (!user) throw new NotFoundException('User not found');
 
     user.role = newRole;
-    return user.save();
-  }
 
-  async logAction(userId: string, action: string, ip?: string) {
-    const log = new this.logModel({ userId, action, ip });
-    await log.save();
+    this.eventEmitter.emit('log.create', {
+      userId: adminId,
+      action: `USER_ROLE_UPDATED ${userId} TO ${newRole}`,
+    });
+    return user.save();
   }
 }

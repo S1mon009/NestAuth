@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InternalServerErrorException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import bcrypt from 'bcrypt';
@@ -25,6 +26,7 @@ export class AuthService {
     private jwtService: JwtService,
     private emailService: EmailService,
     private readonly configService: ConfigService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async register(email: string, password: string) {
@@ -41,6 +43,11 @@ export class AuthService {
 
     const profile = new this.profileModel({ userId: user._id });
     await profile.save();
+
+    this.eventEmitter.emit('log.create', {
+      userId: user.id,
+      action: 'USER_CREATED',
+    });
 
     if (!process.env.JWT_SECRET) {
       throw new InternalServerErrorException('JWT_SECRET is not defined');
@@ -74,6 +81,11 @@ export class AuthService {
 
       user.isVerified = true;
       await user.save();
+
+      this.eventEmitter.emit('log.create', {
+        userId: user.id,
+        action: 'USER_EMAIL_VERIFIED',
+      });
 
       if (this.configService.get<string>('FRONTEND_URL')) {
         return {
@@ -124,6 +136,11 @@ export class AuthService {
     user.refreshToken = refreshToken;
     await user.save();
 
+    this.eventEmitter.emit('log.create', {
+      userId: user.id,
+      action: 'USER_LOGGED_IN',
+    });
+
     return {
       accessToken,
       refreshToken,
@@ -164,6 +181,11 @@ export class AuthService {
       user.refreshToken = refreshToken;
       await user.save();
 
+      this.eventEmitter.emit('log.create', {
+        userId: user.id,
+        action: 'USER_REFRESHED_TOKEN',
+      });
+
       return { accessToken, refreshToken };
     } catch (err: unknown) {
       console.log(err);
@@ -188,6 +210,11 @@ export class AuthService {
     );
 
     await this.emailService.sendResetPasswordEmail(user.email, resetToken);
+
+    this.eventEmitter.emit('log.create', {
+      userId: user.id,
+      action: 'USER_REQUESTED_PASSWORD_RESET',
+    });
 
     return { message: 'Reset link sent to email' };
   }
@@ -229,6 +256,11 @@ export class AuthService {
 
       user.password = await bcrypt.hash(newPassword, 12);
       await user.save();
+
+      this.eventEmitter.emit('log.create', {
+        userId: user.id,
+        action: 'USER_RESET_PASSWORD',
+      });
 
       return { message: 'Password has been successfully reset' };
     } catch (err: unknown) {

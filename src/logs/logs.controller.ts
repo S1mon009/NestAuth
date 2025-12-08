@@ -5,7 +5,7 @@ import { RolesGuard } from '../auth/guards/roles-auth.guard';
 import { Roles } from '../users/decorators/roles.decorator';
 import { Roles as Role } from '../users/enums/roles.enum';
 
-@Controller('logs')
+@Controller({ path: 'logs', version: '1' })
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.ADMIN)
 export class LogsController {
