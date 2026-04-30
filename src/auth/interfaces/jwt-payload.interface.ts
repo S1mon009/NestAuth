@@ -1,9 +1,12 @@
 import { Roles } from 'src/users/enums/roles.enum';
 
 export interface JwtPayloadInterface {
-  sub: string;
   email: string;
-  role: Roles;
+  sub: string;
+  role: Roles | string;
+}
+
+export interface JwtPayloadWithMetaInterface extends JwtPayloadInterface {
   iat: number;
   exp: number;
 }

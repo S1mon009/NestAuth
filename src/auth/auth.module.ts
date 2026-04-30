@@ -8,7 +8,7 @@ import { User, UserSchema } from '../users/schemas/user.schema';
 import { Profile, ProfileSchema } from '../users/schemas/profile.schema';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
-import { JwtStrategy } from './jwt.strategy';
+import { JwtStrategy } from './jwt/jwt.strategy';
 
 @Module({
   imports: [

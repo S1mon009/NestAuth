@@ -9,7 +9,13 @@ export class EmailService {
   constructor(
     @Inject('MAIL_TRANSPORTER') private readonly transporter: Transporter,
     private readonly configService: ConfigService,
-  ) {}
+  ) {
+    this.frontendUrl =
+      this.configService.get<string>('FRONTEND_URL') ||
+      `${this.configService.get<string>('SERVER_URL')}/${this.configService.get<string>('API_VERSION')}`;
+  }
+
+  private readonly frontendUrl: string;
 
   async sendMail(to: string, subject: string, html: string) {
     return await this.transporter.sendMail({
@@ -28,7 +34,7 @@ export class EmailService {
   async sendVerificationEmail(email: string, token: string) {
     const template = this.loadTemplate('verify-email.html');
 
-    const url: string = `${this.configService.get('FRONTEND_URL') || 'http://localhost:3000'}/auth/verify-email?token=${token}`;
+    const url: string = `${this.frontendUrl}/auth/verify-email?token=${token}`;
 
     const html = template.replaceAll('{{verificationLink}}', url);
 
@@ -38,7 +44,7 @@ export class EmailService {
   async sendResetPasswordEmail(email: string, token: string) {
     const template = this.loadTemplate('reset-password.html');
 
-    const url: string = `${this.configService.get('FRONTEND_URL')}/reset-password?token=${token}`;
+    const url: string = `${this.frontendUrl}/auth/reset-password?token=${token}`;
 
     const html = template.replaceAll('{{resetLink}}', url);
 
