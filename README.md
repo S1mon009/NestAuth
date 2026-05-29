@@ -1,208 +1,167 @@
-# NestAuth - A NestJS Authentication App
+# NestAuth
 
-![Static Badge](https://img.shields.io/badge/nestjs-nestjs?style=for-the-badge&logo=nestjs&color=%23E0234E) ![Static Badge](https://img.shields.io/badge/typescript-nestjs?style=for-the-badge&logo=typescript&logoColor=%23fefefe&color=%233178C6)
-![Static Badge](https://img.shields.io/badge/mongodb-mongodb?style=for-the-badge&logo=mongodb&logoColor=%23fefefe&color=%2347A248) ![Static Badge](https://img.shields.io/badge/mongoose-mongoose?style=for-the-badge&logo=mongoose&logoColor=%23fefefe&color=%23880000)
-![Static Badge](https://img.shields.io/badge/mailtrap-mailtrap?style=for-the-badge&logo=mailtrap&logoColor=%23fefefe&color=%2322D172) ![Static Badge](https://img.shields.io/badge/prettier-prettier?style=for-the-badge&logo=prettier&logoColor=%23333&color=%23F7B93E)
-![Static Badge](https://img.shields.io/badge/eslint-eslint?style=for-the-badge&logo=eslint&logoColor=%23fefefe&color=%234B32C3) ![Static Badge](https://img.shields.io/badge/npm-npm?style=for-the-badge&logo=npm&logoColor=%23fefefe&color=%23CB3837)
-![Static Badge](https://img.shields.io/badge/env-env?style=for-the-badge&logo=dotenv&logoColor=%23333&color=%23ECD53F)
+![NestJS](https://img.shields.io/badge/NestJS-11.0.1-E0234E?style=for-the-badge&logo=nestjs)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.7.3-3178C6?style=for-the-badge&logo=typescript)
+![MongoDB](https://img.shields.io/badge/MongoDB-8.19.4-47A248?style=for-the-badge&logo=mongodb)
+![JWT](https://img.shields.io/badge/JWT-jsonwebtoken-339933?style=for-the-badge&logo=jsonwebtokens)
+![Swagger](https://img.shields.io/badge/Swagger-NestJS-61DAFB?style=for-the-badge&logo=swagger)
 
-NestAuth is a backend application built with **NestJS**, providing a full-featured authentication system including **registration, login, email verification, JWT-based authorization**, and **MongoDB integration**.
-Passwords are hashed with **bcrypt**, and verification emails are sent using **Mailtrap**.
+## Overview
 
----
+NestAuth is a secure NestJS backend for authentication and user management. It implements:
 
-## 🔹 Features
+- email-based registration and verification,
+- JWT access token flow with refresh token support,
+- password reset workflow,
+- admin-level user management and profile handling.
 
-- User registration with password hashing
-- Email verification after registration
-- User login and JWT token generation
-- Refresh token mechanism
-- Forgot password mechanism
-- Protected routes requiring JWT authentication
-- MongoDB as the database
-- Input validation with `class-validator`
-- User roles (`user`, `admin`) comming soon
+The project is built with modular NestJS patterns, runtime validation, rate limiting, API versioning, and documentation support.
 
----
+## Features
 
-## 🛠 Technologies
+- User registration with email verification
+- Login with JWT access token
+- Refresh token rotation via HTTP-only cookie
+- Forgot password and reset password flow
+- Reset token validation endpoint
+- Admin-only user creation and list access
+- JWT-protected routes and role-based authorization
+- Global validation and endpoint-level throttling
+- API versioning under `/v1`
+- Swagger UI and Compodoc support
 
-- [NestJS](https://nestjs.com/)
-- [MongoDB](https://www.mongodb.com/)
-- [Mongoose](https://mongoosejs.com/)
-- [JWT (@nestjs/jwt, jsonwebtoken)](https://www.npmjs.com/package/@nestjs/jwt)
-- [bcrypt](https://www.npmjs.com/package/bcrypt)
-- [Nodemailer](https://nodemailer.com/)
-- [Postman](https://www.postman.com/) for API testing
-- [Mailtrap](https://mailtrap.io) for SMTP
+## Technologies
 
----
+- NestJS
+- TypeScript
+- MongoDB + Mongoose
+- JWT (`@nestjs/jwt`, `jsonwebtoken`)
+- Bcrypt
+- Nodemailer + Mailtrap
+- Helmet, cookie-parser, cache manager
+- Swagger + Compodoc
+- Jest + Supertest
 
-## ⚡ Installation
+## Prerequisites
 
-### 1. Clone the repository:
+- Node.js >= 20
+- npm
+- MongoDB instance
+- SMTP provider (Mailtrap recommended)
+
+## Installation
 
 ```bash
 git clone https://github.com/S1mon009/NestAuth.git
 cd NestAuth
-```
-
-### 2. Install dependencies:
-
-```bash
 npm install
 ```
 
-### 3. Configure the `.env` file in the project root:
+## Environment Variables
+
+Create a `.env` file in the project root and provide the required values:
 
 ```env
 MONGO_URI=your_mongodb_uri
-
 JWT_SECRET=supersecretkey
-JWT_EXPIRES_IN=86400  # time in seconds (24h)
-JWT_RESET_PASSWORD_EXPIRES_IN=900 # time in seconds (15m)
-
-REFRESH_TOKEN_SECRET=anothersupersecretkey
-REFRESH_TOKEN_EXPIRES_IN=604800 #time in seconds (7d)
-
-# Mailtrap
+JWT_EXPIRES_IN=86400
+JWT_RESET_PASSWORD_EXPIRES_IN=900
+REFRESH_TOKEN_SECRET=anothersecretkey
+REFRESH_TOKEN_EXPIRES_IN=604800
+COOKIE_SECURE=false
+COOKIE_SAME_SITE=strict
 SMTP_HOST=smtp.mailtrap.io
 SMTP_PORT=2525
 SMTP_USER=YOUR_MAILTRAP_USERNAME
 SMTP_PASS=YOUR_MAILTRAP_PASSWORD
-
-REDIRECT_TO_VERIFY_EMAIL=your_redirect_url_to_verify_email
-FRONTEND_URL=your_frontend_url
+FRONTEND_URL=http://localhost:4200
+SERVER_URL=http://localhost
+API_VERSION=v1
+PORT=3000
+CACHE_TTL=5000
+BCRYPT_SALT=12
 ```
 
-### 4. Start the application
+## Running the Application
 
 ```bash
 npm run start:dev
 ```
 
-The backend will run at `http://localhost:3000`.
+The server runs on `http://localhost:3000` by default.
 
----
+## API Documentation
 
-## 📌 API Endpoints
+Swagger UI is available at:
 
-### 1. Register
-
-```arduino
-POST /auth/register
+```text
+http://localhost:3000/api
 ```
 
-Request body:
+## API Endpoints
 
-```json
-{
-  "email": "test@example.com",
-  "password": "YourPassword"
-}
-```
+Base route: `http://localhost:3000/v1`
 
-Response:
+### Authentication
 
-```json
-{
-  "message": "User registered successfully, verification email sent"
-}
-```
+- `POST /auth/register`
+- `GET /auth/verify-email?token=<token>`
+- `POST /auth/login`
+- `POST /auth/refresh-token`
+- `POST /auth/forgot-password`
+- `POST /auth/verify-reset-password?token=<token>`
+- `POST /auth/reset-password?token=<token>`
 
-The verification link will be send to mailtrap inbox.
+### Users
 
-### 2. Verify email
+- `GET /users/me`
+- `GET /users/all` (admin only)
+- `POST /users/add` (admin only)
+- `GET /users/profile/:id`
+- `PATCH /users/profile/:id`
 
-```arduino
-GET /auth/verify-email?token=<JWT_TOKEN>
-```
+## Scripts
 
-Response:
+- `npm run start` — run the application
+- `npm run start:dev` — run in development mode
+- `npm run start:prod` — run production build
+- `npm run build` — compile TypeScript
+- `npm run lint` — lint project files
+- `npm run lint:fix` — fix lint issues
+- `npm run format` — format code with Prettier
+- `npm run test` — run Jest tests
+- `npm run test:watch` — run tests in watch mode
+- `npm run test:cov` — run coverage
+- `npm run compodoc` — start Compodoc server
+- `npm run compodoc:build` — generate static docs
 
-```json
-{
-  "message": "Email verified successfully"
-}
-```
-
-### 3. Login
-
-```arduino
-POST /auth/login
-```
-
-Request body:
-
-```json
-{
-  "email": "test@example.com",
-  "password": "YourPassword"
-}
-```
-
-Response:
-
-```json
-{
-  "accessToken": "<ACCESS_TOKEN",
-  "refreshToken": "<REFRESH_TOKEN>"
-}
-```
-
-These tokens are used for user authentication.
-
-### 4. Refresh token
-
-```arduino
-POST /auth/refresh-token
-```
-
-Request body:
-
-```json
-{
-  "refreshToken": "<REFRESH_TOKEN>"
-}
-```
-
-Response:
-
-```json
-{
-  "accessToken": "<ACCESS_TOKEN",
-  "refreshToken": "<REFRESH_TOKEN>"
-}
-```
-
-### 5. Profile (protected)
-
-```arduino
-GET /auth/profile
-```
-
-Headers:
+## Testing
 
 ```bash
-Authorization: Bearer <ACCESS_TOKEN>
+npm run test
 ```
 
-Response:
+## Documentation
 
-```json
-{
-  "_id": "123456789",
-  "email": "test@example.com",
-  "role": "user",
-  "isVerified": true
-}
+Generate static documentation:
+
+```bash
+npm run compodoc:build
 ```
 
----
+Launch Compodoc server:
 
-## 🔧 Notes
+```bash
+npm run compodoc
+```
 
-- Passwords are hashed using bcrypt with saltRounds = 12.
-- JWT tokens expire based on .env configuration (JWT_EXPIRES_IN).
-- Users must verify their email to access protected routes.
-- The project will be extended with password reset, admin roles and social login.
+## Notes
+
+- The project validates environment variables on startup.
+- Refresh tokens are stored in HTTP-only cookies.
+- Global rate limiting protects authentication workflows.
+- A dedicated Swagger UI is provided for API exploration.
+
+## License
+
+`UNLICENSED`

@@ -1,19 +1,39 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty } from 'class-validator';
+import LogTypes, { type LogType } from '../types/log-type.type';
 
 export class CreateLogDto {
-  @ApiProperty()
+  @ApiProperty({
+    enum: LogTypes,
+    description: 'The type of the log entry',
+    example: 'info',
+  })
   @IsString()
   @IsNotEmpty()
-  userId: string;
+  type!: LogType;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'The description of the log entry',
+    example: 'User logged in',
+  })
   @IsString()
   @IsNotEmpty()
-  action: string;
+  description!: string;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({
+    description: 'The path of the log entry',
+    example: '/login',
+  })
   @IsString()
   @IsNotEmpty()
-  ip?: string;
+  path!: string;
+
+  @ApiProperty({
+    description: 'The ID of the user associated with the log entry',
+    example: 'user123',
+    required: false,
+  })
+  @IsString()
+  @IsNotEmpty()
+  userId?: string;
 }

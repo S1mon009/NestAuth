@@ -7,6 +7,12 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { GlobalExceptionFilter } from './filters/http-exception.filter';
 import { AppModule } from './app.module';
 
+/**
+ * The main entry point of the NestJS application. This function bootstraps the application by creating an instance of the NestFactory, applying global middleware and configurations, and starting the server to listen for incoming requests.
+ * It sets up security headers using Helmet, parses cookies, enables CORS for the frontend application, applies global validation pipes, and configures API versioning. It also sets up Swagger for API documentation and starts the server on the specified port.
+ * @returns {Promise<void>} A promise that resolves when the application has successfully started.
+ * @throws An error if there is an issue during the bootstrapping process.
+ */
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
 

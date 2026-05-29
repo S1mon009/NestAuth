@@ -2,6 +2,12 @@ import { Module } from '@nestjs/common';
 import { EmailService } from './email.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
+/**
+ * EmailModule is responsible for providing email sending capabilities using nodemailer.
+ * It imports the ConfigModule to access environment variables for SMTP configuration.
+ * The module provides a MAIL_TRANSPORTER that is configured using the environment variables.
+ * The EmailService is also provided and exported for use in other parts of the application.
+ */
 @Module({
   imports: [ConfigModule],
   providers: [

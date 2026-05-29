@@ -7,9 +7,20 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 
+/**
+ * Global exception filter to catch all unhandled exceptions and return a consistent error response format.
+ * This filter will catch both HTTP exceptions and any other unhandled exceptions, ensuring that the client receives a structured error response.
+ * The response includes the status code, timestamp, request path, and error message.
+ */
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
-  catch(exception: unknown, host: ArgumentsHost) {
+  /**
+   * Catches unhandled exceptions and returns a consistent error response.
+   * @param {unknown} exception The caught exception.
+   * @param {ArgumentsHost} host The arguments host.
+   * @returns {void} No return value, as the response is sent directly to the client.
+   */
+  catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
 
     const response = ctx.getResponse<Response>();
@@ -30,6 +41,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         exceptionResponse !== null
       ) {
         const res = exceptionResponse as any;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         message = res.message || message;
       }
     }

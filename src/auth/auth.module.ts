@@ -10,6 +10,11 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt/jwt.strategy';
 
+/**
+ * AuthModule is a NestJS module responsible for handling authentication and authorization in the application. It imports necessary modules such as ConfigModule for configuration management, MongooseModule for database interactions, PassportModule for authentication strategies, and JwtModule for JWT handling.
+ * The module defines controllers and providers related to authentication, including the AuthController for handling authentication-related HTTP requests and the AuthService for implementing authentication logic. It also includes the JwtStrategy for validating JWT tokens.
+ * The AuthModule is exported to be used in other parts of the application where authentication functionality is required.
+ */
 @Module({
   imports: [
     ConfigModule,

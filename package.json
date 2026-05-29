@@ -1,9 +1,9 @@
 {
   "name": "nest-auth",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
-  "private": true,
+  "description": "A NestJS authentication module with JWT, email verification, password reset, and role-based access control. This module provides a comprehensive authentication solution for NestJS applications, including user registration, login, email verification, password reset, and role-based access control. It leverages JWT for secure authentication and includes features such as rate limiting and input validation to enhance security. The module is designed to be easily integrated into any NestJS application, providing a robust and scalable authentication system. It also includes comprehensive documentation and testing to ensure reliability and ease of use.",
+  "author": "S1mon009",
+  "private": false,
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
@@ -18,10 +18,13 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "compodoc": "compodoc -p tsconfig.json -s",
+    "compodoc:build": "compodoc -p tsconfig.json -d documentation"
   },
   "dependencies": {
     "@nestjs-modules/mailer": "^2.0.2",
+    "@nestjs/cache-manager": "^3.1.2",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
@@ -31,8 +34,10 @@
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/swagger": "^11.2.3",
+    "@nestjs/throttler": "^6.5.0",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
+    "cache-manager": "^7.2.8",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
     "cookie-parser": "^1.4.7",
@@ -47,6 +52,7 @@
     "rxjs": "^7.8.1"
   },
   "devDependencies": {
+    "@compodoc/compodoc": "^1.2.1",
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
     "@nestjs/cli": "^11.0.0",
@@ -83,12 +89,16 @@
     "rootDir": "src",
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
+      "^.+\\.(t|j)s$": [
+        "ts-jest",
+        {
+          "tsconfig": "tsconfig.json"
+        }
+      ]
     },
-    "collectCoverageFrom": [
-      "**/*.(t|j)s"
-    ],
-    "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^src/(.*)$": "<rootDir>/$1"
+    }
   }
 }
