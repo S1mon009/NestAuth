@@ -1,4 +1,4 @@
-FROM node:20-bullseye-slim AS builder
+FROM node:22-bullseye-slim AS builder
 
 WORKDIR /usr/src/app
 
@@ -13,13 +13,17 @@ RUN npm run build
 
 RUN npm prune --production
 
-FROM node:20-bullseye-slim AS runner
+FROM node:22-bullseye-slim AS runner
 WORKDIR /usr/src/app
 
 ENV NODE_ENV=production
+ENV HOST=0.0.0.0
+ENV PORT=3000
 
 COPY --from=builder /usr/src/app/dist ./dist
 COPY --from=builder /usr/src/app/node_modules ./node_modules
+COPY --from=builder /usr/src/app/views ./views
+COPY --from=builder /usr/src/app/src/email/templates ./dist/email/templates
 COPY package*.json ./
 
 EXPOSE 3000

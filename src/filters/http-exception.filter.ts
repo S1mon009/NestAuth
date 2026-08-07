@@ -4,6 +4,7 @@ import {
   ArgumentsHost,
   HttpException,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 
@@ -14,6 +15,8 @@ import { Request, Response } from 'express';
  */
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(GlobalExceptionFilter.name);
+
   /**
    * Catches unhandled exceptions and returns a consistent error response.
    * @param {unknown} exception The caught exception.
@@ -46,7 +49,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       }
     }
 
-    console.error('🔥 Exception:', exception);
+    this.logger.error('🔥 Exception:', exception);
 
     response.status(status).json({
       statusCode: status,

@@ -19,13 +19,7 @@ export class EmailService {
   constructor(
     @Inject('MAIL_TRANSPORTER') private readonly transporter: Transporter,
     private readonly configService: ConfigService,
-  ) {
-    this.frontendUrl =
-      this.configService.get<string>('FRONTEND_URL') ||
-      `${this.configService.get<string>('SERVER_URL')}/${this.configService.get<string>('API_VERSION')}`;
-  }
-
-  private readonly frontendUrl: string;
+  ) {}
 
   /**
    * Sends an email using the configured transporter.
@@ -61,8 +55,11 @@ export class EmailService {
    */
   async sendVerificationEmail(email: string, token: string): Promise<any> {
     const template = this.loadTemplate('verify-email.html');
+    const host: string =
+      this.configService.get<string>('FRONTEND_URL') ||
+      `${this.configService.get<string>('HOST')}:${this.configService.get<string>('PORT')}/${this.configService.get<string>('API_VERSION')}`;
 
-    const url: string = `${this.frontendUrl}/auth/verify-email?token=${token}`;
+    const url: string = `${host}/auth/verify-email?token=${token}`;
 
     const html = template.replaceAll('{{verificationLink}}', url);
 
@@ -78,7 +75,10 @@ export class EmailService {
   async sendResetPasswordEmail(email: string, token: string): Promise<any> {
     const template = this.loadTemplate('reset-password.html');
 
-    const url: string = `${this.frontendUrl}/auth/reset-password?token=${token}`;
+    const host: string | undefined =
+      this.configService.get<string>('FRONTEND_URL');
+
+    const url: string = `${host}/auth/reset-password?token=${token}`;
 
     const html = template.replaceAll('{{resetLink}}', url);
 

@@ -1,8 +1,9 @@
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, ConsoleLogger, VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { VersioningType } from '@nestjs/common';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
+import { join } from 'node:path';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { GlobalExceptionFilter } from './filters/http-exception.filter';
 import { AppModule } from './app.module';
@@ -14,11 +15,17 @@ import { AppModule } from './app.module';
  * @throws An error if there is an issue during the bootstrapping process.
  */
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    logger: new ConsoleLogger({
+      prefix: 'NestAuth',
+    }),
+  });
 
   app.use(helmet());
   app.use(cookieParser());
-  app.enableCors({ origin: 'http://localhost:4200' });
+  app.setBaseViewsDir(join(__dirname, '..', 'views'));
+  app.setViewEngine('hbs');
+  app.enableCors({ origin: process.env.CORS_ORIGIN });
   app.useGlobalPipes(new ValidationPipe());
   app.enableVersioning({
     type: VersioningType.URI,
@@ -34,7 +41,7 @@ async function bootstrap(): Promise<void> {
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 3000, process.env.HOST ?? '127.0.0.1');
 }
 
 void bootstrap();

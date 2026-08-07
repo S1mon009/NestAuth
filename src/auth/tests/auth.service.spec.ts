@@ -157,6 +157,20 @@ describe('AuthService', () => {
   });
 
   describe('verifyEmail', () => {
+    it('propagates invalid token errors from jwtService', async () => {
+      const error = new Error('invalid token');
+      jwtService.verify.mockImplementation(() => {
+        throw error;
+      });
+
+      await expect(service.verifyEmail('bad-token')).rejects.toThrow(
+        'invalid token',
+      );
+      expect(jwtService.verify).toHaveBeenCalledWith('bad-token', {
+        secret: undefined,
+      });
+    });
+
     it('throws NotFoundException when user does not exist', async () => {
       jwtService.verify.mockReturnValue({
         sub: 'user-id-123',
@@ -166,6 +180,11 @@ describe('AuthService', () => {
 
       await expect(service.verifyEmail('some-token')).rejects.toThrow(
         NotFoundException,
+      );
+      expect(userModel.findById).toHaveBeenCalledWith('user-id-123');
+      expect(eventEmitter.emit).toHaveBeenCalledWith(
+        'log.create',
+        expect.objectContaining({ type: 'error' }),
       );
     });
 
@@ -200,6 +219,10 @@ describe('AuthService', () => {
       expect(user.isVerified).toBe(true);
       expect(user.save).toHaveBeenCalled();
       expect(result).toEqual({ status: VerifyEmailStatus.VERIFIED });
+      expect(eventEmitter.emit).toHaveBeenCalledWith(
+        'log.create',
+        expect.objectContaining({ type: 'info' }),
+      );
     });
   });
 

@@ -73,8 +73,18 @@ describe('AuthController', () => {
 
       const result = await controller.verifyEmail('my-token');
 
+      expect(authService.verifyEmail).toHaveBeenCalledTimes(1);
       expect(authService.verifyEmail).toHaveBeenCalledWith('my-token');
       expect(result).toEqual(expected);
+    });
+
+    it('propagates errors from authService.verifyEmail', async () => {
+      const error = new Error('verification failed');
+      authService.verifyEmail.mockRejectedValue(error);
+
+      await expect(controller.verifyEmail('my-token')).rejects.toThrow(
+        'verification failed',
+      );
     });
   });
 

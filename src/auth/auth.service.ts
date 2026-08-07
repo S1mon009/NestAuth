@@ -159,7 +159,10 @@ export class AuthService {
         path: `${this.configService.get<string>('API_VERSION')}/auth/verify-email?token=${token}`,
       });
 
-      throw new NotFoundException('User not found for provided token');
+      throw new NotFoundException({
+        error: `${VerifyEmailStatus.INVALID_OR_EXPIRED_TOKEN}`,
+        message: 'User not found for provided token',
+      });
     }
     if (user.isVerified) {
       this.eventEmitter.emit('log.create', {

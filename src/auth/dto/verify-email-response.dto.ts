@@ -6,9 +6,9 @@ import { ApiProperty } from '@nestjs/swagger';
  * This DTO is used to standardize the response format for the email verification endpoint.
  */
 export enum VerifyEmailStatus {
-  VERIFIED = 'VERIFIED',
-  ALREADY_VERIFIED = 'ALREADY_VERIFIED',
-  INVALID_OR_EXPIRED_TOKEN = 'INVALID_OR_EXPIRED_TOKEN',
+  VERIFIED = 'Email is verified',
+  ALREADY_VERIFIED = 'Email is already verified',
+  INVALID_OR_EXPIRED_TOKEN = 'Invalid or expired token',
 }
 
 /**

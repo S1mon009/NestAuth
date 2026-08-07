@@ -5,8 +5,10 @@ import {
   Get,
   Query,
   Res,
+  Render,
   HttpCode,
   HttpStatus,
+  UseFilters,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Throttle, SkipThrottle } from '@nestjs/throttler';
@@ -27,6 +29,7 @@ import {
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { Cookies } from './decorators/cookies.decorator';
+import { VerifyEmailViewFilter } from '../filters/verify-email-view.filter';
 import {
   RegisterResponseDto,
   RegisterDto,
@@ -123,12 +126,12 @@ export class AuthController {
   }
 
   /**
-   * Verifies a user's email address using a token.
-   * @param {string} token The verification token sent to the user's email address.
-   * @returns {Promise<VerifyEmailResponseDto>} A promise resolving to the email verification response.
-   * @throws {BadRequestException} If the user is not found or the token is invalid/expired.
-   * @throws {ConflictException} If the email is already verified.
-   * @remarks This endpoint is not throttled to allow users to verify their email without restrictions. The token is typically sent to the user's email address upon registration, and this endpoint validates the token to confirm the user's email.
+   * Verifies a user's email address using the token received in the verification link.
+   * @param {string} token The verification token passed as a query parameter in the email link.
+   * @returns {Promise<VerifyEmailResponseDto>} A promise resolving to the verification result returned by the authentication service.
+   * @throws {BadRequestException} If the token is missing, invalid, or expired, or if the corresponding user cannot be found.
+   * @throws {ConflictException} If the user's email address has already been verified.
+   * @remarks This endpoint is intentionally not throttled and renders a verification page after processing the token. It is typically called from the link sent during registration.
    * @example
    * // Request URL
    * GET /auth/verify-email?token=verification-token-123
@@ -137,46 +140,49 @@ export class AuthController {
    * {
    *   "status": "VERIFIED"
    * }
-   * or an HTML page indicating successful verification in your frontend application.
-   * // Error response for invalid token
+   * // Error response for an already verified email
    * Status: 409 Conflict
    * {
-   *  "statusCode": 409,
-   *  "timestamp": "<timestamp>",
-   *  "path": "/v1/auth/verify-email?token=<token>",
-   *  "message": "Email address has already been verified"
-   *}
-   * // Error response for user not found or invalid token
+   *   "statusCode": 409,
+   *   "timestamp": "<timestamp>",
+   *   "path": "/v1/auth/verify-email?token=<token>",
+   *   "message": "Email address has already been verified"
+   * }
+   * // Error response for an invalid or expired token
    * Status: 400 Bad Request
    * {
-   *  "statusCode": 400,
-   *  "timestamp": "<timestamp>",
-   *  "path": "/v1/auth/verify-email?token=<token>",
-   * "message": "User not found for provided token"
+   *   "statusCode": 400,
+   *   "timestamp": "<timestamp>",
+   *   "path": "/v1/auth/verify-email?token=<token>",
+   *   "message": "User not found for provided token"
    * }
    */
   @SkipThrottle()
+  @UseFilters(VerifyEmailViewFilter)
   @Get('verify-email')
+  @Render('verify-email')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Verify user email',
+    summary: 'Verify email address',
     description:
-      'Endpoint to verify user email using token sent to their email address',
+      'Endpoint that validates the email verification token from the link sent to the user and completes email confirmation.',
   })
   @ApiQuery({
     name: 'token',
     type: String,
-    description: 'Verification token sent to user email',
+    description:
+      'Verification token passed in the query string of the email link',
   })
   @ApiOkResponse({
-    description: 'Email successfully verified',
+    description: 'Email address verified successfully',
     type: VerifyEmailResponseDto,
   })
   @ApiBadRequestResponse({
-    description: 'User not found or invalid/expired token',
+    description:
+      'Verification token is invalid, expired, or the corresponding user does not exist',
   })
   @ApiConflictResponse({
-    description: 'Email already verified',
+    description: 'Email address has already been verified',
     type: VerifyEmailResponseDto,
   })
   async verifyEmail(

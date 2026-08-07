@@ -28,10 +28,7 @@ import { Roles } from '../users/enums/roles.enum';
  * Controller for handling log-related endpoints such as retrieving all logs and logs for a specific user.
  * @remarks The controller includes rate limiting on certain endpoints to prevent abuse, and uses Swagger decorators to document the API for better developer experience.
  */
-@UseInterceptors(CacheInterceptor)
-@UseGuards(JwtAuthGuard, RolesGuard)
-@RolesDecorator(Roles.ADMIN)
-@ApiTags('Authentication')
+@ApiTags('Logs')
 @ApiUnauthorizedResponse({
   description:
     'Unauthorized. Please provide a valid JWT token to access this resource.',
@@ -39,6 +36,9 @@ import { Roles } from '../users/enums/roles.enum';
 @ApiInternalServerErrorResponse({
   description: 'An unexpected error occurred while processing the request',
 })
+@UseInterceptors(CacheInterceptor)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@RolesDecorator(Roles.ADMIN)
 @Controller({ path: 'logs', version: '1' })
 export class LogsController {
   /**
